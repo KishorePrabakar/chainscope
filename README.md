@@ -25,7 +25,7 @@ and suspicious actors automatically.
 
 ## Quickstart
 
-git clone https://github.com/yourname/chainscope
+git clone https://github.com/kishoreprabakar/chainscope
 cd chainscope
 npm install
 npm start
