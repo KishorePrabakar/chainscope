@@ -77,4 +77,6 @@ function categorize(addressData) {
   };
 }
 
-module.exports = { categorize, KNOWN_EXCHANGES };
+module.exports = { categorizeAddress: categorize, KNOWN_EXCHANGES };
+
+//categorizer.js

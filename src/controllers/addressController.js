@@ -1,4 +1,5 @@
 const db = require('../database');
+const { categorizeAddress } = require('../utils/categorizer');
 
 // POST /api/address - submit address for analysis
 exports.submitAddress = (req, res) => {
@@ -13,20 +14,38 @@ exports.submitAddress = (req, res) => {
     return res.status(400).json({ error: 'Chain must be ethereum or bitcoin' });
   }
 
-  // For now, just store with mock data - we'll add real analysis later
-  const mockData = {
-    balance: 0,
-    total_transactions: 0,
-    category: 'unknown',
-    confidence_score: 0
+  // TODO: Call partner's API fetcher here to get real data
+  // For now, mock data
+  const fetchedData = {
+    address,
+    chain,
+    balance: 1500, // Mock: this would come from Etherscan/Blockchain.info
+    total_transactions: 250,
+    first_seen: '2020-01-15',
+    last_seen: '2024-02-20'
   };
 
+  // Categorize using your rules engine
+  const analysis = categorizeAddress(fetchedData);
+
   const sql = `
-    INSERT INTO addresses (address, chain, balance, total_transactions, category, confidence_score)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO addresses (address, chain, balance, total_transactions, first_seen, last_seen, category, confidence_score, raw_data)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.run(sql, [address, chain, mockData.balance, mockData.total_transactions, mockData.category, mockData.confidence_score], function(err) {
+  const rawData = JSON.stringify(fetchedData);
+
+  db.run(sql, [
+    address,
+    chain,
+    fetchedData.balance,
+    fetchedData.total_transactions,
+    fetchedData.first_seen,
+    fetchedData.last_seen,
+    analysis.category,
+    analysis.confidence_score,
+    rawData
+  ], function(err) {
     if (err) {
       if (err.message.includes('UNIQUE')) {
         return res.status(409).json({ error: 'Address already exists' });
@@ -38,8 +57,12 @@ exports.submitAddress = (req, res) => {
       id: this.lastID,
       address,
       chain,
-      ...mockData,
-      message: 'Address submitted successfully'
+      category: analysis.category,
+      confidence_score: analysis.confidence_score,
+      reasons: analysis.reasons,
+      balance: fetchedData.balance,
+      total_transactions: fetchedData.total_transactions,
+      message: 'Address analyzed and stored successfully'
     });
   });
 };
@@ -83,5 +106,3 @@ exports.getAddress = (req, res) => {
     res.json(row);
   });
 };
-
-//curl -X POST http://localhost:3000/api/address -H "Content-Type: application/json" -d "{\"address\":\"0x123abc\",\"chain\":\"ethereum\"}"
