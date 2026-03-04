@@ -1,6 +1,11 @@
-require('dotenv').config();
-const { getEthereumData } = require('./src/utils/etherscan');
+const { getEthAddressData } = require('./src/utils/etherscan');
 
-getEthereumData('0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')
-  .then(data => console.log("Success:", data))
-  .catch(error => console.error("Error:", error.message));
+const testAddress = '0xd8da6bf26964af9d7eed9e03e53415d37aa96045';
+
+getEthAddressData(testAddress)
+    .then(data => {
+        console.log('--- Test Results ---');
+        console.log(`Balance: ${data.balance} ETH`);
+        console.log(`Last Activity: ${new Date(data.last_seen * 1000).toLocaleString()}`);
+    })
+    .catch(err => console.error(err));
