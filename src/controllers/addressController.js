@@ -1,8 +1,9 @@
 const db = require('../database');
 const { categorizeAddress } = require('../utils/categorizer');
+const { getEthAddressData } = require('../utils/etherscan');
 
 // POST /api/address - submit address for analysis
-exports.submitAddress = (req, res) => {
+exports.submitAddress = async (req, res) => {
   const { address, chain } = req.body;
 
   // Validation
@@ -14,18 +15,27 @@ exports.submitAddress = (req, res) => {
     return res.status(400).json({ error: 'Chain must be ethereum or bitcoin' });
   }
 
-  // TODO: Call partner's API fetcher here to get real data
-  // For now, mock data
-  const fetchedData = {
-    address,
-    chain,
-    balance: 1500, // Mock: this would come from Etherscan/Blockchain.info
-    total_transactions: 250,
-    first_seen: '2020-01-15',
-    last_seen: '2024-02-20'
-  };
+  // Fetch real data from blockchain APIs
+  let fetchedData;
+  try {
+    if (chain === 'ethereum') {
+      const data = await getEthAddressData(address);
+      fetchedData = {
+        address,
+        chain,
+        balance: data.balance,
+        total_transactions: data.transactions.length,
+        first_seen: null,
+        last_seen: data.last_seen ? new Date(data.last_seen * 1000).toISOString() : null
+      };
+    } else {
+      return res.status(400).json({ error: 'Bitcoin support coming soon' });
+    }
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch blockchain data: ' + err.message });
+  }
 
-  // Categorize using your rules engine
+  // Categorize using rules engine
   const analysis = categorizeAddress(fetchedData);
 
   const sql = `
