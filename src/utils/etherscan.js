@@ -2,10 +2,14 @@ const axios = require('axios');
 require('dotenv').config();
 
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
+
+// Etherscan V2 endpoint
 const BASE_URL = 'https://api.etherscan.io/v2/api';
 
 const getEthAddressData = async (address) => {
   try {
+
+    // Fetch balance
     const balanceRes = await axios.get(BASE_URL, {
       params: {
         chainid: 1,
@@ -21,6 +25,7 @@ const getEthAddressData = async (address) => {
       throw new Error(`Etherscan Balance Error: ${balanceRes.data.result}`);
     }
 
+    // Fetch transactions
     const txListRes = await axios.get(BASE_URL, {
       params: {
         chainid: 1,
@@ -36,14 +41,20 @@ const getEthAddressData = async (address) => {
       }
     });
 
-    const hasTransactions = txListRes.data.status === "1" && Array.isArray(txListRes.data.result);
-    const lastTx = hasTransactions ? txListRes.data.result[0] : null;
+    const hasTransactions =
+      txListRes.data.status === "1" &&
+      Array.isArray(txListRes.data.result);
+
+    const lastTx = hasTransactions
+      ? txListRes.data.result[0]
+      : null;
 
     return {
       balance: parseFloat(balanceRes.data.result) / 1e18,
       transactions: hasTransactions ? txListRes.data.result : [],
       last_seen: lastTx ? lastTx.timeStamp : null
     };
+
   } catch (error) {
     console.error("Fetcher Error:", error.message);
     throw error;
