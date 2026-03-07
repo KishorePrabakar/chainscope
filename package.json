@@ -8,7 +8,11 @@
     "dev": "nodemon src/server.js"
   },
   "dependencies": {
+<<<<<<< HEAD
     "axios": "^1.13.5",
+=======
+    "axios": "^1.13.6",
+>>>>>>> origin/feature/kishore
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.18.2",
