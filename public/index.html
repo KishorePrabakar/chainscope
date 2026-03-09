@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ChainScope — See Through the Blockchain</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #050810;
+      --surface:   #090d1a;
+      --panel:     #0d1225;
+      --border:    #1a2340;
+      --border2:   #243060;
+      --accent:    #00d4ff;
+      --accent2:   #0088ff;
+      --green:     #00ff88;
+      --red:       #ff3355;
+      --orange:    #ff8800;
+      --yellow:    #ffcc00;
+      --purple:    #8855ff;
+      --text:      #c8d8f0;
+      --text-dim:  #4a6080;
+      --text-mid:  #7a98c0;
+      --glow:      0 0 20px rgba(0,212,255,0.15);
+      --glow-strong: 0 0 40px rgba(0,212,255,0.3);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 300px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(0,136,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* HEADER */
+    header {
+      position: relative;
+      z-index: 10;
+      border-bottom: 1px solid var(--border);
+      background: rgba(5,8,16,0.95);
+      backdrop-filter: blur(10px);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      position: relative;
+    }
+
+    .logo-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .logo-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 20px;
+      color: var(--accent);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .logo-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: -2px;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s infinite;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* MAIN LAYOUT */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    /* SECTION LABEL */
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border2), transparent);
+    }
+
+    /* SUBMIT PANEL */
+    .submit-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--accent);
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.6;
+    }
+
+    .submit-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 180px 140px;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    input[type="text"], select {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      padding: 10px 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), var(--glow);
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--text-dim);
+    }
+
+    select option {
+      background: var(--panel);
+    }
+
+    .btn-analyze {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 11px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .btn-analyze:hover {
+      background: #fff;
+      box-shadow: var(--glow-strong);
+    }
+
+    .btn-analyze:active { transform: scale(0.98); }
+
+    .btn-analyze:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-analyze .spinner {
+      display: none;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: var(--bg);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+    }
+
+    .btn-analyze.loading .spinner { display: inline-block; }
+    .btn-analyze.loading .btn-text { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ALERT */
+    .alert {
+      padding: 10px 16px;
+      margin-top: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      border-left: 3px solid;
+      display: none;
+    }
+
+    .alert.error { border-color: var(--red); background: rgba(255,51,85,0.08); color: var(--red); }
+    .alert.success { border-color: var(--green); background: rgba(0,255,136,0.08); color: var(--green); }
+    .alert.show { display: block; }
+
+    /* STATS ROW */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 16px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card:hover { border-color: var(--border2); }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--stat-color, var(--accent));
+      opacity: 0.6;
+    }
+
+    .stat-value {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 28px;
+      color: var(--stat-color, var(--accent));
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    /* FILTERS */
+    .filters-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--text-mid);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+      font-weight: 700;
+    }
+
+    .filter-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 4px;
+    }
+
+    /* TABLE */
+    .table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .table-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .table-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-mid);
+    }
+
+    .record-count {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 12px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      background: var(--surface);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      animation: rowIn 0.3s ease forwards;
+      opacity: 0;
+    }
+
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    tbody tr:hover { background: rgba(0,212,255,0.04); }
+    tbody tr:last-child { border-bottom: none; }
+
+    td {
+      padding: 14px 20px;
+      vertical-align: middle;
+    }
+
+    .td-id {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--text-dim);
+      width: 50px;
+    }
+
+    .td-address {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      max-width: 260px;
+    }
+
+    .addr-full {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .addr-full:hover { color: var(--accent); }
+
+    .td-chain {
+      width: 100px;
+    }
+
+    .chain-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border: 1px solid;
+      display: inline-block;
+    }
+
+    .chain-ethereum { color: #627eea; border-color: rgba(98,126,234,0.4); background: rgba(98,126,234,0.08); }
+    .chain-bitcoin  { color: #f7931a; border-color: rgba(247,147,26,0.4); background: rgba(247,147,26,0.08); }
+
+    /* CATEGORY BADGES */
+    .cat-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border: 1px solid;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .cat-badge::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    .cat-exchange  { color: var(--accent);  border-color: rgba(0,212,255,0.3);  background: rgba(0,212,255,0.08); }
+    .cat-whale     { color: var(--purple);  border-color: rgba(136,85,255,0.3); background: rgba(136,85,255,0.08); }
+    .cat-dormant   { color: var(--text-dim);border-color: rgba(74,96,128,0.4);  background: rgba(74,96,128,0.08); }
+    .cat-suspicious{ color: var(--red);     border-color: rgba(255,51,85,0.3);  background: rgba(255,51,85,0.08); }
+    .cat-mixer     { color: var(--orange);  border-color: rgba(255,136,0,0.3);  background: rgba(255,136,0,0.08); }
+    .cat-clean     { color: var(--green);   border-color: rgba(0,255,136,0.3);  background: rgba(0,255,136,0.08); }
+    .cat-unknown   { color: var(--yellow);  border-color: rgba(255,204,0,0.3);  background: rgba(255,204,0,0.08); }
+
+    /* CONFIDENCE BAR */
+    .confidence-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 100px;
+    }
+
+    .conf-bar {
+      flex: 1;
+      height: 3px;
+      background: var(--border);
+      overflow: hidden;
+    }
+
+    .conf-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.5s ease;
+    }
+
+    .conf-val {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--text-mid);
+      width: 30px;
+      text-align: right;
+    }
+
+    .td-balance {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .td-txs {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      color: var(--text-mid);
+    }
+
+    .td-actions {
+      width: 60px;
+      text-align: center;
+    }
+
+    .btn-delete {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px 8px;
+      transition: all 0.15s;
+      font-family: monospace;
+    }
+
+    .btn-delete:hover {
+      border-color: var(--red);
+      color: var(--red);
+      background: rgba(255,51,85,0.08);
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .empty-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+      opacity: 0.3;
+    }
+
+    .empty-text {
+      font-size: 12px;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* LOADING STATE */
+    .loading-row td {
+      text-align: center;
+      padding: 40px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+
+    /* SCANLINE EFFECT */
+    .scanline {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      animation: scan 4s linear infinite;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    @keyframes scan {
+      0%   { top: 0%;   opacity: 0; }
+      5%   { opacity: 0.3; }
+      95%  { opacity: 0.3; }
+      100% { top: 100%; opacity: 0; }
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--panel);
+      border: 1px solid var(--border2);
+      border-left: 3px solid var(--accent);
+      padding: 12px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      z-index: 999;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s;
+      max-width: 320px;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.error { border-left-color: var(--red); }
+    .toast.success { border-left-color: var(--green); }
+
+    @media (max-width: 900px) {
+      .input-row { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 36 36" fill="none">
+        <circle cx="18" cy="18" r="16" stroke="#00d4ff" stroke-width="1" opacity="0.3"/>
+        <circle cx="18" cy="18" r="10" stroke="#00d4ff" stroke-width="1.5" opacity="0.6"/>
+        <circle cx="18" cy="18" r="4" fill="#00d4ff"/>
+        <line x1="18" y1="2" x2="18" y2="8" stroke="#00d4ff" stroke-width="1.5"/>
+        <line x1="18" y1="28" x2="18" y2="34" stroke="#00d4ff" stroke-width="1.5"/>
+        <line x1="2" y1="18" x2="8" y2="18" stroke="#00d4ff" stroke-width="1.5"/>
+        <line x1="28" y1="18" x2="34" y2="18" stroke="#00d4ff" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-text">ChainScope</div>
+      <div class="logo-sub">Blockchain Intelligence Platform</div>
+    </div>
+  </div>
+  <div class="header-status">
+    <span><span class="status-dot"></span>API ONLINE</span>
+    <span id="clock" style="color: var(--text-mid)"></span>
+  </div>
+</header>
+
+<main>
+
+  <!-- SUBMIT -->
+  <div class="section-label">Address Analysis</div>
+  <div class="submit-panel">
+    <div class="submit-title">Submit Address for Analysis</div>
+    <div class="input-row">
+      <div class="field-group">
+        <div class="field-label">Wallet Address</div>
+        <input type="text" id="addressInput" placeholder="0x... or Bitcoin address"/>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Network</div>
+        <select id="chainSelect">
+          <option value="ethereum">Ethereum</option>
+          <option value="bitcoin">Bitcoin</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">&nbsp;</div>
+        <button class="btn-analyze" id="analyzeBtn" onclick="submitAddress()">
+          <span class="spinner"></span>
+          <span class="btn-text">▶ Analyze</span>
+        </button>
+      </div>
+    </div>
+    <div class="alert" id="alertBox"></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="section-label">Intelligence Summary</div>
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card" style="--stat-color: var(--accent)">
+      <div class="stat-value" id="statTotal">—</div>
+      <div class="stat-label">Total Addresses</div>
+    </div>
+    <div class="stat-card" style="--stat-color: var(--accent)">
+      <div class="stat-value" id="statExchange">—</div>
+      <div class="stat-label">Exchanges</div>
+    </div>
+    <div class="stat-card" style="--stat-color: var(--purple)">
+      <div class="stat-value" id="statWhale">—</div>
+      <div class="stat-label">Whales</div>
+    </div>
+    <div class="stat-card" style="--stat-color: var(--red)">
+      <div class="stat-value" id="statSuspicious">—</div>
+      <div class="stat-label">Suspicious</div>
+    </div>
+    <div class="stat-card" style="--stat-color: var(--text-dim)">
+      <div class="stat-value" id="statDormant">—</div>
+      <div class="stat-label">Dormant</div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="section-label">Address Registry</div>
+
+  <div class="filters-row">
+    <button class="filter-btn active" onclick="filterBy('all', this)">All</button>
+    <div class="filter-sep"></div>
+    <button class="filter-btn" onclick="filterBy('exchange', this)">Exchange</button>
+    <button class="filter-btn" onclick="filterBy('whale', this)">Whale</button>
+    <button class="filter-btn" onclick="filterBy('suspicious', this)">Suspicious</button>
+    <button class="filter-btn" onclick="filterBy('mixer', this)">Mixer</button>
+    <button class="filter-btn" onclick="filterBy('dormant', this)">Dormant</button>
+    <button class="filter-btn" onclick="filterBy('clean', this)">Clean</button>
+    <button class="filter-btn" onclick="filterBy('unknown', this)">Unknown</button>
+    <div class="filter-sep"></div>
+    <button class="filter-btn" onclick="filterChain('ethereum', this)">ETH</button>
+    <button class="filter-btn" onclick="filterChain('bitcoin', this)">BTC</button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header-bar">
+      <span class="table-title">Analyzed Addresses</span>
+      <span class="record-count" id="recordCount">— records</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Address</th>
+          <th>Network</th>
+          <th>Category</th>
+          <th>Confidence</th>
+          <th>Balance</th>
+          <th>Transactions</th>
+          <th>Last Seen</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr class="loading-row">
+          <td colspan="9">LOADING INTELLIGENCE DATA...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://localhost:3000/api';
+  let allData = [];
+  let activeCategory = 'all';
+  let activeChain = 'all';
+
+  // Clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toUTCString().replace('GMT', 'UTC');
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Toast
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.className = 'toast', 3000);
+  }
+
+  // Alert
+  function showAlert(msg, type) {
+    const a = document.getElementById('alertBox');
+    a.textContent = msg;
+    a.className = `alert ${type} show`;
+    setTimeout(() => a.className = 'alert', 4000);
+  }
+
+  // Format address
+  function fmtAddr(addr) {
+    if (!addr) return '—';
+    if (addr.length > 20) return addr.slice(0, 10) + '...' + addr.slice(-8);
+    return addr;
+  }
+
+  // Format balance
+  function fmtBalance(bal, chain) {
+    if (bal === null || bal === undefined) return '—';
+    const n = parseFloat(bal);
+    const sym = chain === 'bitcoin' ? 'BTC' : 'ETH';
+    if (n > 1000) return n.toLocaleString('en', {maximumFractionDigits: 2}) + ' ' + sym;
+    return n.toFixed(4) + ' ' + sym;
+  }
+
+  // Format date
+  function fmtDate(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en', {year:'2-digit', month:'short', day:'numeric'});
+  }
+
+  // Category badge
+  function catBadge(cat) {
+    const c = (cat || 'unknown').toLowerCase();
+    return `<span class="cat-badge cat-${c}">${c}</span>`;
+  }
+
+  // Chain badge
+  function chainBadge(chain) {
+    return `<span class="chain-badge chain-${chain}">${chain === 'ethereum' ? 'ETH' : 'BTC'}</span>`;
+  }
+
+  // Confidence bar
+  function confBar(score) {
+    const pct = Math.round((score || 0) * 100);
+    const color = pct >= 90 ? 'var(--green)' : pct >= 60 ? 'var(--accent)' : 'var(--yellow)';
+    return `<div class="confidence-wrap">
+      <div class="conf-bar"><div class="conf-fill" style="width:${pct}%;background:${color}"></div></div>
+      <span class="conf-val">${pct}%</span>
+    </div>`;
+  }
+
+  // Update stats
+  function updateStats(data) {
+    document.getElementById('statTotal').textContent = data.length;
+    document.getElementById('statExchange').textContent = data.filter(d => d.category === 'exchange').length;
+    document.getElementById('statWhale').textContent = data.filter(d => d.category === 'whale').length;
+    document.getElementById('statSuspicious').textContent = data.filter(d => d.category === 'suspicious').length;
+    document.getElementById('statDormant').textContent = data.filter(d => d.category === 'dormant').length;
+  }
+
+  // Render table
+  function renderTable(data) {
+    const tbody = document.getElementById('tableBody');
+    document.getElementById('recordCount').textContent = `${data.length} record${data.length !== 1 ? 's' : ''}`;
+
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="9">
+        <div class="empty-state">
+          <div class="empty-icon">◈</div>
+          <div class="empty-text">No addresses found</div>
+        </div>
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map((row, i) => `
+      <tr style="animation-delay:${i * 40}ms">
+        <td class="td-id">${row.id}</td>
+        <td class="td-address">
+          <span class="addr-full" title="${row.address}" onclick="navigator.clipboard.writeText('${row.address}').then(()=>showToast('Address copied'))">
+            ${fmtAddr(row.address)}
+          </span>
+        </td>
+        <td class="td-chain">${chainBadge(row.chain)}</td>
+        <td>${catBadge(row.category)}</td>
+        <td>${confBar(row.confidence_score)}</td>
+        <td class="td-balance">${fmtBalance(row.balance, row.chain)}</td>
+        <td class="td-txs">${row.total_transactions ?? '—'}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim)">${fmtDate(row.last_seen)}</td>
+        <td class="td-actions">
+          <button class="btn-delete" onclick="deleteAddress(${row.id})" title="Delete">✕</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Filter logic
+  function applyFilters() {
+    let filtered = [...allData];
+    if (activeCategory !== 'all') filtered = filtered.filter(d => d.category === activeCategory);
+    if (activeChain !== 'all') filtered = filtered.filter(d => d.chain === activeChain);
+    renderTable(filtered);
+  }
+
+  function filterBy(cat, btn) {
+    activeCategory = cat;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      if (['all','exchange','whale','suspicious','mixer','dormant','clean','unknown'].some(c => b.textContent.toLowerCase() === c)) {
+        b.classList.remove('active');
+      }
+    });
+    btn.classList.add('active');
+    applyFilters();
+  }
+
+  function filterChain(chain, btn) {
+    if (activeChain === chain) {
+      activeChain = 'all';
+      btn.classList.remove('active');
+    } else {
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        if (b.textContent === 'ETH' || b.textContent === 'BTC') b.classList.remove('active');
+      });
+      activeChain = chain;
+      btn.classList.add('active');
+    }
+    applyFilters();
+  }
+
+  // Load data
+  async function loadAddresses() {
+    try {
+      const res = await fetch(`${API}/addresses`);
+      const json = await res.json();
+      allData = json.addresses || [];
+      updateStats(allData);
+      applyFilters();
+    } catch (e) {
+      document.getElementById('tableBody').innerHTML =
+        `<tr class="loading-row"><td colspan="9" style="color:var(--red)">CANNOT CONNECT TO API — IS THE SERVER RUNNING?</td></tr>`;
+    }
+  }
+
+  // Submit address
+  async function submitAddress() {
+    const address = document.getElementById('addressInput').value.trim();
+    const chain = document.getElementById('chainSelect').value;
+    if (!address) { showAlert('Enter a wallet address', 'error'); return; }
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    try {
+      const res = await fetch(`${API}/address`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, chain })
+      });
+      const json = await res.json();
+
+      if (!res.ok) {
+        showAlert(json.error || 'Analysis failed', 'error');
+        showToast(json.error || 'Error', 'error');
+      } else {
+        showAlert(`Categorized as: ${json.category.toUpperCase()} (${Math.round(json.confidence_score * 100)}% confidence)`, 'success');
+        showToast(`${json.category.toUpperCase()} — ${fmtBalance(json.balance, chain)}`, 'success');
+        document.getElementById('addressInput').value = '';
+        loadAddresses();
+      }
+    } catch (e) {
+      showAlert('Cannot reach API', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    }
+  }
+
+  // Delete
+  async function deleteAddress(id) {
+    if (!confirm('Remove this address from the registry?')) return;
+    try {
+      const res = await fetch(`${API}/address/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        showToast('Address removed', 'success');
+        loadAddresses();
+      }
+    } catch (e) {
+      showToast('Delete failed', 'error');
+    }
+  }
+
+  // Enter key
+  document.getElementById('addressInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitAddress();
+  });
+
+  // Boot
+  loadAddresses();
+</script>
+</body>
+</html>

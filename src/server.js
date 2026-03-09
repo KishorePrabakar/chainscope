@@ -11,6 +11,7 @@ app.use('/analyze', analyzeRoutes);
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
 
 // Test route
 app.get('/', (req, res) => {
