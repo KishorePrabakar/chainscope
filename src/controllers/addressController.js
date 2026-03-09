@@ -1,12 +1,12 @@
 const db = require('../database');
 const { categorizeAddress } = require('../utils/categorizer');
 const { getEthAddressData } = require('../utils/etherscan');
+const { getBtcAddressData } = require('../utils/blockchain');
 
 // POST /api/address - submit address for analysis
 exports.submitAddress = async (req, res) => {
   const { address, chain } = req.body;
 
-  // Validation
   if (!address || !chain) {
     return res.status(400).json({ error: 'Address and chain are required' });
   }
@@ -15,7 +15,6 @@ exports.submitAddress = async (req, res) => {
     return res.status(400).json({ error: 'Chain must be ethereum or bitcoin' });
   }
 
-  // Fetch real data from blockchain APIs
   let fetchedData;
   try {
     if (chain === 'ethereum') {
@@ -29,13 +28,20 @@ exports.submitAddress = async (req, res) => {
         last_seen: data.last_seen ? new Date(data.last_seen * 1000).toISOString() : null
       };
     } else {
-      return res.status(400).json({ error: 'Bitcoin support coming soon' });
+      const data = await getBtcAddressData(address);
+      fetchedData = {
+        address,
+        chain,
+        balance: data.balance,
+        total_transactions: data.total_tx_count,
+        first_seen: null,
+        last_seen: data.last_seen ? new Date(data.last_seen * 1000).toISOString() : null
+      };
     }
   } catch (err) {
     return res.status(500).json({ error: 'Failed to fetch blockchain data: ' + err.message });
   }
 
-  // Categorize using rules engine
   const analysis = categorizeAddress(fetchedData);
 
   const sql = `
@@ -114,5 +120,20 @@ exports.getAddress = (req, res) => {
       return res.status(404).json({ error: 'Address not found' });
     }
     res.json(row);
+  });
+};
+
+// DELETE /api/address/:id
+exports.deleteAddress = (req, res) => {
+  const { id } = req.params;
+
+  db.run('DELETE FROM addresses WHERE id = ?', [id], function(err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Address not found' });
+    }
+    res.json({ message: 'Address deleted successfully' });
   });
 };

@@ -16,7 +16,8 @@ const KNOWN_EXCHANGES = {
 function categorizeAddress(addressData) {
   const { address, chain, balance, total_transactions, last_seen } = addressData;
 
-  if (KNOWN_EXCHANGES[chain] && KNOWN_EXCHANGES[chain].includes(address.toLowerCase())) {
+  const normalizedAddress = chain === 'ethereum' ? address.toLowerCase() : address;
+  if (KNOWN_EXCHANGES[chain] && KNOWN_EXCHANGES[chain].includes(normalizedAddress)) {
     return { category: 'exchange', confidence_score: 1.0, reasons: ['Matches known exchange address'] };
   }
 
