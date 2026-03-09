@@ -1,7 +1,9 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const dbPath = path.join(__dirname, '..', 'chainscope.db');
+const dbPath = process.env.NODE_ENV === 'production' 
+  ? '/tmp/chainscope.db' 
+  : path.join(__dirname, '..', 'chainscope.db');
 const db = new sqlite3.Database(dbPath);
 
 // Create tables
